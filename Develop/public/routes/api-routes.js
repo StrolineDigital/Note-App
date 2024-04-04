@@ -21,9 +21,11 @@ router.get('/notes', async(res) => {
 //This POST route receives a new note to save on the request body, adds it to the db.json file,
 // and then returns the new note to the client.
 
-router.post('/notes', (req, res) => {
-    const newNote = req.body;
-    newNote.id = uuidv4();
+router.post('/notes', async (req, res) => {
+    const newNote = {title: req.body.title,
+    text: req.body.text,
+    id: uuidv4(),};
+    
     fs.readFile('./db/db.json', 'utf8', (err, data) => {
         if (err) {
             console.error(err);
