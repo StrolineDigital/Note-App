@@ -21,25 +21,36 @@ router.get('/notes', async(res) => {
 //This POST route receives a new note to save on the request body, adds it to the db.json file,
 // and then returns the new note to the client.
 
-router.post('/notes', async (req, res) => {
-    const newNote = {title: req.body.title,
-    text: req.body.text,
-    id: uuidv4(),};
+router.post('/api/notes', async (req, res) => {
+    const newNote = {
+        title: req.body.title,
+        text: req.body.text,
+        id: uuidv4(),
+    };
     
     fs.readFile('./db/db.json', 'utf8', (err, data) => {
         if (err) {
             console.error(err);
-            return;
+            return res.status(500).json({ error: 'Failed to read file' });
         }
-        const notes = JSON.parse(data);
+        
+        let notes;
+        try {
+            notes = JSON.parse(data);
+        } catch (parseError) {
+            console.error('Failed to parse JSON:', parseError);
+            return res.status(500).json({ error: 'Invalid JSON data' });
+        }
+
         notes.push(newNote);
+        
         fs.writeFile('./db/db.json', JSON.stringify(notes), (err) => {
             if (err) {
                 console.error(err);
-                return;
+                return res.status(500).json({ error: 'Failed to write file' });
             }
             res.json(newNote);
-            console.log(newNote);
+            console.log('Note added:', newNote);
         });
     });
 });
