@@ -6,7 +6,6 @@ let saveNoteBtn;
 let newNoteBtn;
 let noteList;
 
-// If there is a note in the textarea, display it, otherwise hide it
 if (window.location.pathname === '/notes') {
   noteForm = document.querySelector('.note-form');
   noteTitle = document.querySelector('.note-title');
@@ -29,7 +28,7 @@ const hide = (elem) => {
 
 // activeNote is used to keep track of the note in the textarea
 let activeNote = {};
-// A function to get notes from the db
+
 const getNotes = () =>
   fetch('/api/notes', {
     method: 'GET',
@@ -37,16 +36,29 @@ const getNotes = () =>
       'Content-Type': 'application/json'
     }
   });
-// A function to save a note to the db
-const saveNote = (note) =>
-  fetch('/api/notes', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(note)
-  });
-// A function to delete a note from the db
+
+  const saveNote = async (note) => {
+    try {
+      const response = await fetch('/api/notes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(note)
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to save note');
+      }
+  
+      const newNote = await response.json();
+      return newNote;
+    } catch (error) {
+      console.error('Error saving note:', error);
+      throw error;
+    }
+  };
+
 const deleteNote = (id) =>
   fetch(`/api/notes/${id}`, {
     method: 'DELETE',
@@ -54,7 +66,7 @@ const deleteNote = (id) =>
       'Content-Type': 'application/json'
     }
   });
-// If there is an activeNote, display it, otherwise render empty inputs
+
 const renderActiveNote = () => {
   hide(saveNoteBtn);
   hide(clearBtn);
@@ -73,7 +85,7 @@ const renderActiveNote = () => {
     noteText.value = '';
   }
 };
-// Get the note data from the inputs, save it to the db and update the view
+
 const handleNoteSave = () => {
   const newNote = {
     title: noteTitle.value,
@@ -149,7 +161,7 @@ const renderNoteList = async (notes) => {
     spanEl.addEventListener('click', handleNoteView);
 
     liEl.append(spanEl);
-// If the delete button is true, create and append it to the li
+
     if (delBtn) {
       const delBtnEl = document.createElement('i');
       delBtnEl.classList.add(
@@ -166,18 +178,18 @@ const renderNoteList = async (notes) => {
 
     return liEl;
   };
-// If there are no notes, display a message
+
   if (jsonNotes.length === 0) {
     noteListItems.push(createLi('No saved Notes', false));
   }
-// If there are notes, create an li element for each note
+
   jsonNotes.forEach((note) => {
     const li = createLi(note.title);
     li.dataset.note = JSON.stringify(note);
 
     noteListItems.push(li);
   });
-// Append the li elements to the ul
+
   if (window.location.pathname === '/notes') {
     noteListItems.forEach((note) => noteList[0].append(note));
   }
@@ -192,5 +204,5 @@ if (window.location.pathname === '/notes') {
   clearBtn.addEventListener('click', renderActiveNote);
   noteForm.addEventListener('input', handleRenderBtns);
 }
-// call the getAndRenderNotes function once the page is loaded
+
 getAndRenderNotes();
